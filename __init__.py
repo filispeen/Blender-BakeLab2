@@ -1,22 +1,9 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 bl_info = {
     "name" : "BakeLab",
     "author" : "Shahzod Boyxonov (specoolar@gmail.com)",
     "description" : "Bake textures easily",
-    "blender" : (2, 81, 0),
-    "version" : (2, 0, 1),
+    "blender" : (4, 0, 0),
+    "version" : (2, 0, 2),
     "location" : "View3D > Properties > BakeLab",
     "category" : "Baking"
 }
@@ -40,8 +27,8 @@ else:
 import bpy
 
 from bpy.types import (
-            Operator, 
-            PropertyGroup, 
+            Operator,
+            PropertyGroup,
             Panel
         )
 from bpy.props import (
@@ -60,10 +47,6 @@ def updateAdaptiveImageMinSize(self, context):
 
 def updateAdaptiveImageMaxSize(self, context):
     self.image_max_size = max(self.image_min_size, self.image_max_size)
-
-def updateSavePath(self, context):
-    if bpy.data.is_saved:
-        self.save_path = bpy.path.abspath(self.save_path)
 
 class BakeLabProperties(PropertyGroup):
     bake_state: EnumProperty(
@@ -122,7 +105,7 @@ class BakeLabProperties(PropertyGroup):
             update=updateAdaptiveImageMinSize
         )
     round_adaptive_image : BoolProperty(
-        name = 'Round to power of two', 
+        name = 'Round to power of two',
         default = True
     )
     anti_alias : IntProperty(
@@ -162,7 +145,7 @@ class BakeLabProperties(PropertyGroup):
         name="Create folder",
         description="Automatically creates a folder named after the object(s)",
         default = True
-        ) 
+        )
     folder_name  : StringProperty(
             name = 'Folder name',
             description = 'Name of the folder',
@@ -172,12 +155,11 @@ class BakeLabProperties(PropertyGroup):
                 default=expanduser("~"),
                 name="Folder",
                 subtype="DIR_PATH",
-                update=updateSavePath
             )
     show_bake_settings : BoolProperty(name = '', default = False)
     show_map_settings  : BoolProperty(name = '', default = False)
     show_file_settings : BoolProperty(name = '', default = False)
-    
+
     apply_only_selected : BoolProperty(
         name = 'Apply only to Selected',
         description = 'Apply only to selected objects',
@@ -188,7 +170,6 @@ class BakeLabProperties(PropertyGroup):
         description = 'Make data single user',
         default = True
     )
-    # Display
     baking_obj_count : IntProperty(
             name = 'Baking object count',
             default = 0
@@ -224,7 +205,7 @@ class BakeLabProperties(PropertyGroup):
 
 classes = (
     BakeLabProperties,
-    
+
     bakelab_bake.Baker,
     bakelab_uv.Unwrapper,
     bakelab_uv.ClearUV,
@@ -246,7 +227,7 @@ classes = (
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-        
+
     bpy.types.Scene.BakeLabProps = PointerProperty(type = BakeLabProperties)
     bpy.types.Scene.BakeLabMaps = CollectionProperty(type = bakelab_map.BakeLabMap)
     bpy.types.Scene.BakeLab_Data = CollectionProperty(type = bakelab_baked_data.BakeLab_BakedData)
@@ -255,7 +236,7 @@ def register():
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
-    
+
     del bpy.types.Scene.BakeLabProps
     del bpy.types.Scene.BakeLabMaps
     del bpy.types.Scene.BakeLab_Data

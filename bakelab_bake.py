@@ -211,7 +211,94 @@ class Baker(Operator):
             if dst_input is not None:
                 if hasattr(src_input, 'default_value') and \
                         hasattr(dst_input, 'default_value'):
-                    dst_input.default_value = src_input.default_value
+
+                    try:
+                        src_val = src_input.default_value
+                        dst_val = dst_input.default_value
+
+                        print(
+                            "COPY:",
+                            node.name,
+                            src_input.name,
+                            src_val,
+                            "->",
+                            dst_input.name,
+                            dst_val
+                        )
+
+                        if "Vector" in dst_input.bl_idname:
+                            try:
+                                value = tuple(src_val[:3])
+                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                dst_input.default_value = value
+                            except Exception as e:
+                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                raise
+                        else:
+                            try:
+                                if hasattr(dst_input.default_value, "__len__"):
+                                    dst_len = len(dst_input.default_value)
+
+                                    if hasattr(src_val, "__len__"):
+                                        if len(src_val) > dst_len:
+                                            try:
+                                                value = src_val[:dst_len]
+                                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                                dst_input.default_value = value
+                                            except Exception as e:
+                                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                                raise
+                                        elif len(src_val) < dst_len:
+                                            try:
+                                                value = tuple(src_val) + tuple([0.0] * (dst_len - len(src_val)))
+                                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                                dst_input.default_value = value
+                                            except Exception as e:
+                                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                                raise
+                                            print(
+                                                "DEBUG:",
+                                                dst_input.name,
+                                                dst_input.bl_idname,
+                                                src_val
+                                            )
+                                        else:
+                                            try:
+                                                value = src_val
+                                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                                dst_input.default_value = value
+                                            except Exception as e:
+                                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                                raise
+                                    else:
+                                        try:
+                                            value = src_val
+                                            print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                            dst_input.default_value = value
+                                        except Exception as e:
+                                            print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                            raise
+                                else:
+                                    try:
+                                        value = src_val
+                                        print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                        dst_input.default_value = value
+                                    except Exception as e:
+                                        print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                        raise
+                            except:
+                                pass
+
+                    except Exception as e:
+                        print(
+                            "FAILED:",
+                            node.name,
+                            src_input.name,
+                            src_val,
+                            "->",
+                            dst_input.name,
+                            e
+                        )
         return new_node
     
     def find_node(self, nodes, type):
@@ -251,18 +338,233 @@ class Baker(Operator):
                 from_node = link.from_node
                 
                 if from_node == gr_in:
-                    ng_input = self.get_socket(n_group.inputs, link.from_socket.identifier)
+                    ng_input = self.get_socket(
+                        n_group.inputs,
+                        link.from_socket.identifier
+                    )
+
                     if ng_input is None:
                         continue
-                    dst_input.default_value = ng_input.default_value
-                    for ng_link in ng_input.links:
-                        links.new(ng_link.from_socket, dst_input)
+
+                    src_val = ng_input.default_value
+
+                    try:
+                        dst_val = dst_input.default_value
+
+                        if hasattr(dst_val, "__len__") and not isinstance(dst_val, str):
+                            try:
+                                dst_len = len(dst_val)
+                            except:
+                                dst_len = 1
+
+                            if "Vector" in dst_input.bl_idname:
+                                dst_len = 3
+
+                            elif "Color" in dst_input.bl_idname:
+                                dst_len = 4
+
+                            print(
+                                "SRC:", src_input.name,
+                                "DST:", dst_input.name,
+                                "SRC_LEN:", len(src_val) if hasattr(src_val, "__len__") else 1,
+                                "DST_LEN:", dst_len,
+                                "DST_SOCKET:", dst_input.bl_idname
+                            )
+
+                            if hasattr(src_val, "__len__"):
+                                src_len = len(src_val)
+
+                                if "Vector" in dst_input.bl_idname:
+                                    tmp = list(src_val[:3])
+                                    while len(tmp) < 3:
+                                        tmp.append(0.0)
+                                    print(
+                                        "SOCKET:",
+                                        dst_input.name,
+                                        dst_input.bl_idname,
+                                        "LEN:",
+                                        len(tmp) if 'tmp' in locals() else 'scalar'
+                                    )
+                                    try:
+                                        value = tuple(tmp[:dst_len])
+                                        print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                        dst_input.default_value = value
+                                    except Exception as e:
+                                        print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                        raise
+
+                                elif "Color" in dst_input.bl_idname:
+                                    tmp = list(src_val[:4])
+
+                                    while len(tmp) < 4:
+                                        tmp.append(1.0)
+
+                                    print(
+                                        "SOCKET:",
+                                        dst_input.name,
+                                        "TYPE:",
+                                        dst_input.bl_idname,
+                                        "DST_LEN:",
+                                        dst_len,
+                                        "VALUE_LEN:",
+                                        len(tmp)
+                                    )
+
+                                    try:
+                                        value = tuple(tmp[:4])
+                                        print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                        dst_input.default_value = value
+                                    except Exception as e:
+                                        print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                        raise
+                                elif src_len > dst_len:
+                                    if "Vector" in dst_input.bl_idname:
+                                        try:
+                                            value = tuple(src_val[:3])
+                                            print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                            dst_input.default_value = value
+                                        except Exception as e:
+                                            print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                            raise
+                                    elif dst_input.bl_idname == "NodeSocketColor":
+                                        tmp = list(src_val[:4])
+                                        while len(tmp) < 4:
+                                            tmp.append(1.0)
+                                        try:
+                                            value = tuple(tmp[:4])
+                                            print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                            dst_input.default_value = value
+                                        except Exception as e:
+                                            print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                            raise
+                                    else:
+                                        try:
+                                            value = tuple(src_val[:dst_len])
+                                            print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                            dst_input.default_value = value
+                                        except Exception as e:
+                                            print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                            raise
+
+                                elif src_len < dst_len:
+                                    tmp = list(src_val)
+                                    tmp.extend([src_val[-1]] * (dst_len - src_len))
+                                    print(
+                                        "SOCKET:",
+                                        dst_input.name,
+                                        dst_input.bl_idname,
+                                        "LEN:",
+                                        len(tmp) if 'tmp' in locals() else 'scalar'
+                                    )
+                                    try:
+                                        value = tuple(tmp[:dst_len])
+                                        print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                        dst_input.default_value = value
+                                    except Exception as e:
+                                        print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                        raise
+
+                                else:
+                                    if "Vector" in dst_input.bl_idname:
+                                        try:
+                                            value = tuple(src_val[:3])
+                                            print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                            dst_input.default_value = value
+                                        except Exception as e:
+                                            print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                            raise
+
+                                    elif dst_input.bl_idname == "NodeSocketColor":
+                                        tmp = list(src_val[:4])
+                                        while len(tmp) < 4:
+                                            tmp.append(1.0)
+                                        print(
+                                            "SOCKET:",
+                                            dst_input.name,
+                                            dst_input.bl_idname,
+                                            "LEN:",
+                                            len(tmp) if 'tmp' in locals() else 'scalar'
+                                        )
+                                        try:
+                                            value = tuple(tmp[:dst_len])
+                                            print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                            dst_input.default_value = value
+                                        except Exception as e:
+                                            print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                            raise
+
+                                    else:
+                                        if "Vector" in dst_input.bl_idname:
+                                            try:
+                                                value = tuple(src_val[:3])
+                                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                                dst_input.default_value = value
+                                            except Exception as e:
+                                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                                raise
+                                        elif dst_input.bl_idname == "NodeSocketColor":
+                                            tmp = list(src_val[:4])
+                                            while len(tmp) < 4:
+                                                tmp.append(1.0)
+                                            try:
+                                                value = tuple(tmp[:4])
+                                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                                dst_input.default_value = value
+                                            except Exception as e:
+                                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                                raise
+                                        else:
+                                            try:
+                                                value = tuple(src_val[:dst_len])
+                                                print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                                dst_input.default_value = value
+                                            except Exception as e:
+                                                print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                                raise
+                            else:
+                                try:
+                                    value = tuple([src_val] * dst_len)
+                                    print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                    dst_input.default_value = value
+                                except Exception as e:
+                                    print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                    raise
+                        else:
+                            if hasattr(src_val, "__len__"):
+                                try:
+                                    value = float(src_val[0])
+                                    print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                    dst_input.default_value = value
+                                except Exception as e:
+                                    print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                    raise
+                            else:
+                                try:
+                                    value = float(src_val)
+                                    print("ASSIGN:", dst_input.name, dst_input.bl_idname, value)
+                                    dst_input.default_value = value
+                                except Exception as e:
+                                    print("FAILED:", dst_input.name, dst_input.bl_idname, value, e)
+                                    raise
+
+                    except Exception as e:
+                        print("ERROR SOCKET:", dst_input.name)
+                        print("ERROR TYPE:", dst_input.bl_idname)
+                        print("ERROR VALUE:", src_val)
+                        print("ERROR:", e)
+
+                        raise
+
                 else:
                     link_node = self.extract_nodes_rc(
                         from_node, gr_in, gr_out,
                         nodes, links, n_group, node_dict)
+
                     if link_node is not None:
-                        link_output = self.get_socket(link_node.outputs, link.from_socket.identifier)
+                        link_output = self.get_socket(
+                            link_node.outputs,
+                            link.from_socket.identifier)
+
                         if link_output is not None:
                             links.new(link_output, dst_input)
         ### }

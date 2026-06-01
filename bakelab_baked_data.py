@@ -20,9 +20,10 @@ class BakeObjData(PropertyGroup):
         type=bpy.types.Object
     )
 class BakeMapData(PropertyGroup):
-    bake_map : PointerProperty(
-        type=bakelab_map.BakeLabMap
-    )
+    map_type : StringProperty()
+    pass_name : StringProperty()
+    normal_space : StringProperty()
+
     image : PointerProperty(
         type=bpy.types.Image
     )
@@ -42,8 +43,7 @@ class BakeLab_BakedData(PropertyGroup):
     def AddMap(self, bake_map, image):
         item = self.map_list.add()
         
-        item.bake_map.type = bake_map.type
-        item.bake_map.pass_name = bake_map.pass_name
-        item.bake_map.normal_space = bake_map.normal_space
-        
+        item.map_type = bake_map.type
+        item.pass_name = bake_map.pass_name
+        item.normal_space = bake_map.normal_space
         item.image = image
