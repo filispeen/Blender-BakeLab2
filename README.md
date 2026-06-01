@@ -1,15 +1,15 @@
 # Blender-BakeLab2
 ![Thumbnail](bakelab_thumbnail_text_logo_small.jpg)
 BakeLab - A blender addon for baking images.<br>
-Compatible with Blender 5.1.2 or higher.<br>
+Compatible with Blender 4.0.0/5.0.0 or higher.<br>
 For Blender version 2.79, go to [here](https://github.com/Shahzod114/Bakelab-Blender-addon)
 
 Main Features:
-* Automatically create images, setup materials, bake objects and save/pack images in one click;
+* Automatically create images, setup materials, bake objects, and save/pack images in one click;
 * Automatically generating materials;
 * Anti-Aliased baking;
 * Baking cycles displacement to real geometry;
-* Bake any PBR attributes of your material by its name (Metallic, Roughness, Specular and etc);
+* Bake any PBR attributes of your material by its name (Metallic, Roughness, Specular etc.);
 * Adaptive image size by object's surface size;
 * Unwrap and Bake Multiple Objects into one image;
 
